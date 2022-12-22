@@ -6,6 +6,8 @@ LABEL Matteo Perotto <perotto.matteo@gmail.com>
 # Set up some basic packages
 # ======================================
 ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Remove any third-party apt sources to avoid issues with expiring keys.
 RUN rm -f /etc/apt/sources.list.d/*.list
@@ -71,7 +73,6 @@ RUN conda update -n base -c defaults conda
 
 COPY env.yml .
 RUN conda env update -n base -f ./env.yml \
- && rm env.yml \
  && conda clean -ya
 RUN conda init bash 
      
@@ -82,16 +83,14 @@ WORKDIR /home/user
  
 RUN git clone https://github.com/MatteoPerotto/GPIS.git
 RUN git clone https://github.com/MatteoPerotto/implicit_representation_benchmark.git
-RUN git clone https://github.com/sea-bass/ycb-tools.git
 
-RUN cd ycb-tools && python download_ycb_dataset.py
-RUN cd && rm -rf ycb-tools
+RUN wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1gmcDD-5bkJfcMKLZb3zGgH_HUFbulQWu' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1gmcDD-5bkJfcMKLZb3zGgH_HUFbulQWu" -O YCB_Video_Models.zip && rm -rf /tmp/cookies.txt
+RUN unzip YCB_Video_Models.zip -d ./YCB_Video_Models && rm -rf YCB_Video_Models.zip
 
 # ======================================
 # Add to bashrc 
 # ======================================
 RUN echo 'export PYTHONPATH="${PYTHONPATH}=/home/user/implicit_representation_benchmark"'>> ~/.bashrc 
-
 
 CMD ["bash"]
 
